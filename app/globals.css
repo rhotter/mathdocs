@@ -59,3 +59,10 @@ math-field::part(menu-toggle) {
   font-weight: bold;
   margin-bottom: 0.5em;
 }
+
+math-field[read-only] {
+  min-width: unset;
+  pointer-events: none;
+  /* background: transparent; */
+  @apply text-gray-600 text-sm bg-blue-200/50 rounded-md px-1;
+}

@@ -84,7 +84,6 @@ function MathBlockView(props: any) {
   }, [])
 
   useEffect(() => {
-    // Focus the math field when it's created
     setTimeout(() => {
       mathFieldRef.current?.focus()
     }, 0)
@@ -107,9 +106,12 @@ function MathBlockView(props: any) {
           menu-editor="none"
           className="border-none shadow-none"
         ></math-field>
-        {result && (
-          <div className="mt-2 text-gray-600">
-            = {result}
+        {result && result !== '\\mathrm{Nothing}' && (
+          <div className="mt-2 text-gray-600 flex justify-end">
+            <math-field
+              read-only
+              className="border-none shadow-none"
+            >{`= ${result}`}</math-field>
           </div>
         )}
       </div>
