@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "katex/dist/katex.min.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -16,6 +18,25 @@ body {
 math-field {
   min-width: 200px;
   font-size: 1.2em;
+  background: rgb(249 250 251);
+}
+
+math-field:focus {
+  outline: none;
+}
+
+math-field:focus-visible {
+  outline: none;
+}
+
+/* Hide the keyboard toggle button */
+math-field::part(virtual-keyboard-toggle) {
+  display: none;
+}
+
+/* Hide the menu toggle button */
+math-field::part(menu-toggle) {
+  display: none;
 }
 
 .ProseMirror {

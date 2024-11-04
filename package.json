@@ -13,6 +13,7 @@
     "@tiptap/pm": "^2.9.1",
     "@tiptap/react": "^2.9.1",
     "@tiptap/starter-kit": "^2.9.1",
+    "katex": "^0.16.11",
     "mathlive": "^0.101.1",
     "next": "15.0.2",
     "react": "^18.3.1",
