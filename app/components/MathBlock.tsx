@@ -5,6 +5,7 @@ import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import 'mathlive'
 import { useMath } from '../contexts/MathContext'
+import { BoxedExpression } from '@cortex-js/compute-engine'
 
 declare global {
   namespace JSX {
@@ -76,29 +77,27 @@ function MathBlockView(props: any) {
         return
       }
 
-      const expr = ce.parse(latex)
-
       Object.entries(variables).forEach(([name, value]) => {
         ce.assign(name, value)
       })
 
-      const evaluated = expr.evaluate()
-      setResult(evaluated.latex)
-
-      // Only update variables if this is an assignment expression
       if (latex.includes('=')) {
         const [varName, assignedValue] = latex.split('=').map(s => s.trim())
         // If the right side is empty, remove the variable
         if (!assignedValue.trim()) {
           updateVariable(varName, null)
         } else {
-          const value = ce.parse(assignedValue).evaluate().value
-          if (typeof value === 'number') {
-            updateVariable(varName, value)
+          const evaluated = ce.parse(assignedValue).evaluate()
+          setResult(evaluated.latex)
+          if (typeof evaluated.value === 'number') {
+            updateVariable(varName, evaluated.value)
           } else {
             updateVariable(varName, null)
           }
         }
+      } else {
+        const evaluated = ce.parse(latex).evaluate()
+        setResult(evaluated.latex)
       }
     } catch (error) {
       console.error('Calculation error:', error)
