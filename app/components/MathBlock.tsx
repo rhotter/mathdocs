@@ -2,9 +2,9 @@
 
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
-import { ComputeEngine } from '@cortex-js/compute-engine'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import 'mathlive'
+import { useMath } from '../contexts/MathContext'
 
 declare global {
   namespace JSX {
@@ -63,25 +63,58 @@ const MathBlock = Node.create({
 function MathBlockView(props: any) {
   const mathFieldRef = useRef<HTMLElement>(null)
   const [result, setResult] = useState('')
-  const ce = new ComputeEngine()
+  const { variables, ce, updateVariable } = useMath()
+  useEffect(() => {
+    console.log('variables', variables)
+  }, [variables])
 
-  const calculateResult = (latex: string) => {
+  const calculateResult = useCallback((latex: string) => {
     try {
+      // If latex is empty, don't try to calculate
+      if (!latex.trim()) {
+        setResult('')
+        return
+      }
+
       const expr = ce.parse(latex)
+
+      Object.entries(variables).forEach(([name, value]) => {
+        ce.assign(name, value)
+      })
+
       const evaluated = expr.evaluate()
       setResult(evaluated.latex)
+
+      if (latex.includes('=')) {
+        const [varName, assignedValue] = latex.split('=').map(s => s.trim())
+        // If the right side is empty, remove the variable
+        if (!assignedValue.trim()) {
+          updateVariable(varName, null)
+        } else {
+          const value = ce.parse(assignedValue).evaluate().value
+          if (typeof value === 'number') {
+            updateVariable(varName, value)
+          }
+        }
+      }
     } catch (error) {
       console.error('Calculation error:', error)
+      setResult('')
     }
-  }
+  }, [variables, ce, updateVariable])
 
   useEffect(() => {
-    if (mathFieldRef.current) {
-      mathFieldRef.current.addEventListener('input', (evt: any) => {
-        calculateResult(evt.target.value)
-      })
+    const handleInput = (evt: any) => {
+      calculateResult(evt.target.value)
     }
-  }, [])
+
+    if (mathFieldRef.current) {
+      mathFieldRef.current.addEventListener('input', handleInput)
+      return () => {
+        mathFieldRef.current?.removeEventListener('input', handleInput)
+      }
+    }
+  }, [calculateResult])
 
   useEffect(() => {
     setTimeout(() => {

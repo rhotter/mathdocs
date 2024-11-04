@@ -4,6 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useCallback, useEffect } from 'react'
 import MathBlock from './components/MathBlock'
+import { MathProvider } from './contexts/MathContext'
 
 export default function Home() {
   const editor = useEditor({
@@ -33,8 +34,10 @@ export default function Home() {
   }, [handleKeyDown])
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <EditorContent editor={editor} />
-    </div>
+    <MathProvider>
+      <div className="max-w-3xl mx-auto p-8">
+        <EditorContent editor={editor} />
+      </div>
+    </MathProvider>
   )
 }
