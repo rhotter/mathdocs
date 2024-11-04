@@ -61,7 +61,7 @@ const MathBlock = Node.create({
 })
 
 function MathBlockView(props: any) {
-  const mathFieldRef = useRef<HTMLElement>(null)
+  const mathFieldRef = useRef<any>(null)
   const [result, setResult] = useState('')
   const { variables, ce, updateVariable } = useMath()
   useEffect(() => {
@@ -85,6 +85,7 @@ function MathBlockView(props: any) {
       const evaluated = expr.evaluate()
       setResult(evaluated.latex)
 
+      // Only update variables if this is an assignment expression
       if (latex.includes('=')) {
         const [varName, assignedValue] = latex.split('=').map(s => s.trim())
         // If the right side is empty, remove the variable
@@ -94,6 +95,8 @@ function MathBlockView(props: any) {
           const value = ce.parse(assignedValue).evaluate().value
           if (typeof value === 'number') {
             updateVariable(varName, value)
+          } else {
+            updateVariable(varName, null)
           }
         }
       }
@@ -121,6 +124,14 @@ function MathBlockView(props: any) {
       mathFieldRef.current?.focus()
     }, 0)
   }, [])
+
+  // Add a separate effect for variable changes that doesn't trigger updates
+  useEffect(() => {
+    if (mathFieldRef.current && !mathFieldRef.current.value.includes('=')) {
+      const currentLatex = mathFieldRef.current.value
+      calculateResult(currentLatex)
+    }
+  }, [variables, calculateResult])
 
   const handleClick = () => {
     mathFieldRef.current?.focus()
