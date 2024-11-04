@@ -11,7 +11,13 @@ export default function Home() {
       StarterKit,
       MathBlock,
     ],
-    content: '<h1>Welcome to the Math Editor</h1><p>Write markdown and press CMD+E to insert math blocks.</p>',
+    content: '<h1>Welcome to Mathdocs</h1><p>Write markdown and press CMD+E to insert math blocks.</p>',
+    editorProps: {
+      attributes: {
+        class: 'prose prose-slate max-w-none',
+      },
+    },
+    immediatelyRender: false,
   })
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -28,7 +34,7 @@ export default function Home() {
 
   return (
     <div className="max-w-3xl mx-auto p-8">
-      <EditorContent editor={editor} className="prose prose-slate max-w-none" />
+      <EditorContent editor={editor} />
     </div>
   )
 }

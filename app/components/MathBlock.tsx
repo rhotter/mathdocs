@@ -61,7 +61,7 @@ const MathBlock = Node.create({
 })
 
 function MathBlockView(props: any) {
-  const mathFieldRef = useRef(null)
+  const mathFieldRef = useRef<HTMLElement>(null)
   const [result, setResult] = useState('')
   const ce = new ComputeEngine()
 
