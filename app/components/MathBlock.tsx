@@ -63,74 +63,28 @@ const MathBlock = Node.create({
 
 function MathBlockView(props: any) {
   const mathFieldRef = useRef<any>(null)
-  const [result, setResult] = useState('')
-  const { variables, ce, updateVariable } = useMath()
-  useEffect(() => {
-    console.log('variables', variables)
-  }, [variables])
+  const { updateExpression, results } = useMath()
+  const id = props.node.attrs.id || props.getPos()
 
-  const calculateResult = useCallback((latex: string) => {
-    try {
-      // If latex is empty, don't try to calculate
-      if (!latex.trim()) {
-        setResult('')
-        return
-      }
-
-      Object.entries(variables).forEach(([name, value]) => {
-        ce.assign(name, value)
-      })
-
-      if (latex.includes('=')) {
-        const [varName, assignedValue] = latex.split('=').map(s => s.trim())
-        // If the right side is empty, remove the variable
-        if (!assignedValue.trim()) {
-          updateVariable(varName, null)
-        } else {
-          const evaluated = ce.parse(assignedValue).evaluate()
-          setResult(evaluated.latex)
-          if (typeof evaluated.value === 'number') {
-            updateVariable(varName, evaluated.value)
-          } else {
-            updateVariable(varName, null)
-          }
-        }
-      } else {
-        const evaluated = ce.parse(latex).evaluate()
-        setResult(evaluated.latex)
-      }
-    } catch (error) {
-      console.error('Calculation error:', error)
-      setResult('')
-    }
-  }, [variables, ce, updateVariable])
+  const handleInput = useCallback((evt: any) => {
+    const newLatex = evt.target.value
+    updateExpression(id, newLatex)
+  }, [id, updateExpression])
 
   useEffect(() => {
-    const handleInput = (evt: any) => {
-      calculateResult(evt.target.value)
-    }
-
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
       }
     }
-  }, [calculateResult])
+  }, [handleInput])
 
   useEffect(() => {
     setTimeout(() => {
       mathFieldRef.current?.focus()
     }, 0)
   }, [])
-
-  // Add a separate effect for variable changes that doesn't trigger updates
-  useEffect(() => {
-    if (mathFieldRef.current && !mathFieldRef.current.value.includes('=')) {
-      const currentLatex = mathFieldRef.current.value
-      calculateResult(currentLatex)
-    }
-  }, [variables, calculateResult])
 
   const handleClick = () => {
     mathFieldRef.current?.focus()
@@ -149,12 +103,12 @@ function MathBlockView(props: any) {
           menu-editor="none"
           className="border-none shadow-none"
         ></math-field>
-        {result && result !== '\\mathrm{Nothing}' && (
+        {results[id] && results[id] !== '\\mathrm{Nothing}' && (
           <div className="mt-2 text-gray-600 flex justify-end">
             <math-field
               read-only
               className="border-none shadow-none"
-            >{`= ${result}`}</math-field>
+            >{`= ${results[id]}`}</math-field>
           </div>
         )}
       </div>
