@@ -66,11 +66,18 @@ export function MathProvider({ children }: { children: ReactNode }) {
     // Map from variable name back to ID
     const varToId = new Map<string, string>()
     
+    // Modified to handle both equations and direct expressions
     Object.entries(expressionsArg).forEach(([id, expr]) => {
-      const [lhs, rhs] = expr.split('=').map(x => x.trim())
-      if (lhs && rhs) {
-        exprs.set(lhs, rhs)
-        varToId.set(lhs, id) // Store the mapping from variable to ID
+      const parts = expr.split('=').map(x => x.trim())
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        // Equation case: "x = 5" or "y = x + 3"
+        exprs.set(parts[0], parts[1])
+        varToId.set(parts[0], id)
+      } else {
+        // Direct expression case: "4+5" or "b+3"
+        const varName = `_expr_${id}` // Create a valid variable name
+        exprs.set(varName, expr)
+        varToId.set(varName, id)
       }
     })
 
