@@ -87,8 +87,6 @@ export function MathProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    console.log({exprs})
-
     // Set to track variables being evaluated (for cycle detection)
     const evaluating = new Set<string>()
     
