@@ -68,6 +68,7 @@ function MathInlineView(props: any) {
     updateExpression(id, newLatex)
   }, [id, updateExpression])
 
+  // Moving out of the math field with arrow keys
   const handleMoveOut = useCallback((evt: any) => {
     if (evt.detail.direction === 'forward') {
       const pos = props.getPos() + props.node.nodeSize
@@ -79,8 +80,10 @@ function MathInlineView(props: any) {
     evt.preventDefault()
   }, [props])
 
+  // Moving into the math field with arrow keys
   const handleKeyDown = useCallback((evt: KeyboardEvent) => {
     if (evt.key === 'ArrowLeft') {
+      // TODO: When on the left of the math inline block, this is also being triggered.
       const pos = props.getPos()
       const currentPos = props.editor.state.selection.$anchor.pos
       
