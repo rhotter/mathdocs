@@ -129,7 +129,9 @@ function MathInlineView(props: any) {
     }
   }, [handleKeyDown])
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
     mathFieldRef.current?.focus()
   }
 
@@ -137,7 +139,6 @@ function MathInlineView(props: any) {
     <NodeViewWrapper className="inline">
       <span 
         className="align-middle cursor-text" 
-        onClick={handleClick}
       >
         <math-field
           ref={mathFieldRef}
@@ -145,7 +146,8 @@ function MathInlineView(props: any) {
           virtual-keyboard-mode="manual"
           menu-editor="none"
           className="inline-math"
-        ></math-field>
+          onMouseDown={handleClick}
+        />
       </span>
     </NodeViewWrapper>
   )
