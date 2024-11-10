@@ -71,14 +71,35 @@ function MathBlockView(props: any) {
     updateExpression(id, newLatex)
   }, [id, updateExpression])
 
+  // Moving out of the math field with arrow keys
+  const handleMoveOut = useCallback((evt: any) => {
+    if (evt.detail.direction === 'forward' || evt.detail.direction === 'downward') {
+      const pos = props.getPos() + props.node.nodeSize
+      props.editor.chain().focus().setTextSelection(pos).run()
+    } else if (evt.detail.direction === 'backward' || evt.detail.direction === 'upward') {
+      const pos = props.getPos() - 1
+      props.editor.chain().focus().setTextSelection(pos).run()
+    }
+    evt.preventDefault()
+  }, [props])
+
+  // This effectively lets you move into the math field with arrow keys
+  useEffect(() => {
+    if (props.selected) {
+      mathFieldRef.current?.focus()
+    }
+  }, [props.selected])
+
   useEffect(() => {
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
+      mathFieldRef.current.addEventListener('move-out', handleMoveOut)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
+        mathFieldRef.current?.removeEventListener('move-out', handleMoveOut)
       }
     }
-  }, [handleInput])
+  }, [handleInput, handleMoveOut])
 
   useEffect(() => {
     setTimeout(() => {
@@ -86,7 +107,9 @@ function MathBlockView(props: any) {
     }, 0)
   }, [])
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
     mathFieldRef.current?.focus()
   }
 
@@ -94,7 +117,7 @@ function MathBlockView(props: any) {
     <NodeViewWrapper>
       <div 
         className="my-4 p-4 bg-gray-50 rounded-lg text-center cursor-text" 
-        onClick={handleClick}
+        onMouseDown={handleClick}
       >
         <math-field
           ref={mathFieldRef}

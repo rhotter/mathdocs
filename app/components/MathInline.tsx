@@ -63,6 +63,13 @@ function MathInlineView(props: any) {
   const { updateExpression } = useMath()
   const id = props.node.attrs.id || props.getPos()
 
+  // This effectively lets you move into the math field with arrow keys
+  useEffect(() => {
+    if (props.selected) {
+      mathFieldRef.current?.focus()
+    }
+  }, [props.selected])
+
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
     updateExpression(id, newLatex)
@@ -78,31 +85,6 @@ function MathInlineView(props: any) {
       props.editor.chain().focus().setTextSelection(pos).run()
     }
     evt.preventDefault()
-  }, [props])
-
-  // Moving into the math field with arrow keys
-  const handleKeyDown = useCallback((evt: KeyboardEvent) => {
-    if (evt.key === 'ArrowLeft') {
-      // TODO: When on the left of the math inline block, this is also being triggered.
-      const pos = props.getPos()
-      const currentPos = props.editor.state.selection.$anchor.pos
-      
-      // If cursor is right after math block, move into it
-      if (currentPos === pos) {
-        evt.preventDefault()
-        mathFieldRef.current?.focus()
-      }
-      
-    } else if (evt.key === 'ArrowRight') {
-      const pos = props.getPos()
-      const currentPos = props.editor.state.selection.$anchor.pos
-      
-      // If cursor is right before math block, move into it
-      if (currentPos === pos) {
-        evt.preventDefault()
-        mathFieldRef.current?.focus()
-      }
-    }
   }, [props])
 
   useEffect(() => {
@@ -121,13 +103,6 @@ function MathInlineView(props: any) {
       mathFieldRef.current?.focus()
     }, 0)
   }, [])
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleKeyDown])
 
   const handleClick = (event: React.MouseEvent) => {
     event.preventDefault()
