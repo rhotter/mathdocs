@@ -79,6 +79,30 @@ function MathInlineView(props: any) {
     evt.preventDefault()
   }, [props])
 
+  const handleKeyDown = useCallback((evt: KeyboardEvent) => {
+    if (evt.key === 'ArrowLeft') {
+      const pos = props.getPos()
+      const currentPos = props.editor.state.selection.$anchor.pos
+      console.log({pos, currentPos})
+      
+      // If cursor is right after math block, move into it
+      if (currentPos === pos) {
+        evt.preventDefault()
+        mathFieldRef.current?.focus()
+      }
+      
+    } else if (evt.key === 'ArrowRight') {
+      const pos = props.getPos()
+      const currentPos = props.editor.state.selection.$anchor.pos
+      
+      // If cursor is right before math block, move into it
+      if (currentPos === pos) {
+        evt.preventDefault()
+        mathFieldRef.current?.focus()
+      }
+    }
+  }, [props])
+
   useEffect(() => {
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
@@ -95,6 +119,13 @@ function MathInlineView(props: any) {
       mathFieldRef.current?.focus()
     }, 0)
   }, [])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleKeyDown])
 
   const handleClick = () => {
     mathFieldRef.current?.focus()
