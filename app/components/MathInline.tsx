@@ -65,10 +65,11 @@ function MathInlineView(props: any) {
 
   // This effectively lets you move into the math field with arrow keys
   useEffect(() => {
-    if (props.selected) {
+    if (props.selected && props.editor.state.selection.from === props.getPos() && 
+        props.editor.state.selection.to === props.getPos() + props.node.nodeSize) {
       mathFieldRef.current?.focus()
     }
-  }, [props.selected])
+  }, [props.selected, props.editor.state.selection])
 
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
@@ -77,10 +78,10 @@ function MathInlineView(props: any) {
 
   // Moving out of the math field with arrow keys
   const handleMoveOut = useCallback((evt: any) => {
-    if (evt.detail.direction === 'forward') {
+    if (evt.detail.direction === 'forward' || evt.detail.direction === 'downward') {
       const pos = props.getPos() + props.node.nodeSize
       props.editor.chain().focus().setTextSelection(pos).run()
-    } else if (evt.detail.direction === 'backward') {
+    } else if (evt.detail.direction === 'backward' || evt.detail.direction === 'upward') {
       const pos = props.getPos()
       props.editor.chain().focus().setTextSelection(pos).run()
     }

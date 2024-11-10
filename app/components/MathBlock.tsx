@@ -85,10 +85,11 @@ function MathBlockView(props: any) {
 
   // This effectively lets you move into the math field with arrow keys
   useEffect(() => {
-    if (props.selected) {
+    if (props.selected && props.editor.state.selection.from === props.getPos() && 
+        props.editor.state.selection.to === props.getPos() + props.node.nodeSize) {
       mathFieldRef.current?.focus()
     }
-  }, [props.selected])
+  }, [props.selected, props.editor.state.selection])
 
   useEffect(() => {
     if (mathFieldRef.current) {
