@@ -68,14 +68,27 @@ function MathInlineView(props: any) {
     updateExpression(id, newLatex)
   }, [id, updateExpression])
 
+  const handleMoveOut = useCallback((evt: any) => {
+    if (evt.detail.direction === 'forward') {
+      const pos = props.getPos() + props.node.nodeSize
+      props.editor.chain().focus().setTextSelection(pos).run()
+    } else if (evt.detail.direction === 'backward') {
+      const pos = props.getPos()
+      props.editor.chain().focus().setTextSelection(pos).run()
+    }
+    evt.preventDefault()
+  }, [props])
+
   useEffect(() => {
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
+      mathFieldRef.current.addEventListener('move-out', handleMoveOut)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
+        mathFieldRef.current?.removeEventListener('move-out', handleMoveOut)
       }
     }
-  }, [handleInput])
+  }, [handleInput, handleMoveOut])
 
   useEffect(() => {
     setTimeout(() => {
