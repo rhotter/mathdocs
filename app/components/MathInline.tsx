@@ -83,7 +83,6 @@ function MathInlineView(props: any) {
     if (evt.key === 'ArrowLeft') {
       const pos = props.getPos()
       const currentPos = props.editor.state.selection.$anchor.pos
-      console.log({pos, currentPos})
       
       // If cursor is right after math block, move into it
       if (currentPos === pos) {
