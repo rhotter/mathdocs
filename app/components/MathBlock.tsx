@@ -69,7 +69,11 @@ function MathBlockView(props: any) {
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
     updateExpression(id, newLatex)
-  }, [id, updateExpression])
+    props.updateAttributes({ 
+      latex: newLatex,
+      result: results[id] || ''
+    })
+  }, [id, updateExpression, props.updateAttributes, results])
 
   // Moving out of the math field with arrow keys
   const handleMoveOut = useCallback((evt: any) => {
@@ -122,6 +126,7 @@ function MathBlockView(props: any) {
       >
         <math-field
           ref={mathFieldRef}
+          value={props.node.attrs.latex}
           default-mode="math"
           virtual-keyboard-mode="manual"
           menu-editor="none"
@@ -131,8 +136,9 @@ function MathBlockView(props: any) {
           <div className="mt-2 text-gray-600 flex justify-end">
             <math-field
               read-only
+              value={`= ${results[id]}`}
               className="border-none shadow-none"
-            >{`= ${results[id]}`}</math-field>
+            />
           </div>
         )}
       </div>

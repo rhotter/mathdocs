@@ -74,7 +74,8 @@ function MathInlineView(props: any) {
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
     updateExpression(id, newLatex)
-  }, [id, updateExpression])
+    props.updateAttributes({ latex: newLatex })
+  }, [id, updateExpression, props.updateAttributes])
 
   // Moving out of the math field with arrow keys
   const handleMoveOut = useCallback((evt: any) => {
@@ -118,6 +119,7 @@ function MathInlineView(props: any) {
       >
         <math-field
           ref={mathFieldRef}
+          value={props.node.attrs.latex}
           default-mode="math"
           virtual-keyboard-mode="manual"
           menu-editor="none"
