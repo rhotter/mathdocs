@@ -3,18 +3,19 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useCallback, useEffect } from 'react'
-import MathBlock from './components/MathBlock'
-import MathInline from './components/MathInline'
-import { MathProvider } from './contexts/MathContext'
+import MathBlock from '../../components/MathBlock'
+import MathInline from '../../components/MathInline'
+import { MathProvider } from '../../contexts/MathContext'
 import * as Y from 'yjs'
 import Collaboration from '@tiptap/extension-collaboration'
 import { TiptapCollabProvider } from '@hocuspocus/provider'
 import { useSearchParams } from 'next/navigation'
+import { use } from 'react'
 
-export default function Home() {
+export default function DocPage({params}: {params: Promise<{docId: string}>}) {
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode') || 'edit'
-  const docName = searchParams.get('doc') || 'default-doc'
+  const { docId } = use(params)
   
   const ydoc = new Y.Doc()
 
@@ -40,7 +41,7 @@ export default function Home() {
 
   useEffect(() => {
     const provider = new TiptapCollabProvider({
-      name: docName,
+      name: docId,
       appId: process.env.NEXT_PUBLIC_TIPTAP_APP_ID!,
       token: process.env.NEXT_PUBLIC_TIPTAP_TOKEN!,
       document: ydoc,
