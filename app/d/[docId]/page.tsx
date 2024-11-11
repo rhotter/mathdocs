@@ -18,6 +18,7 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
   const { docId } = use(params)
   
   const ydoc = new Y.Doc()
+  const isMac = typeof window !== 'undefined' && /Macintosh/.test(navigator.userAgent);
 
   const editor = useEditor({
     extensions: [
@@ -50,10 +51,11 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
         console.log('synced')
         if (!ydoc.getMap('config').get('initialContentLoaded') && editor) {
           ydoc.getMap('config').set('initialContentLoaded', true)
-          console.log('synced')
-
+          
+          const modifier = isMac ? 'CMD' : 'CTRL';
+          
           editor?.commands.setContent(
-            '<h1>Welcome to Mathdocs</h1><p>Write markdown and press CMD+E for inline math, or CMD+SHIFT+E for block math.</p>',
+            `<h1>Welcome to Mathdocs</h1><p>Write markdown and press ${modifier}+E for inline math, or ${modifier}+SHIFT+E for block math.</p>`,
           )
         }
       }
@@ -63,10 +65,12 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!editor?.isEditable) return
     
-    if (event.metaKey && !event.shiftKey && event.key === 'e') {
+    const isModifierPressed = isMac ? event.metaKey : event.ctrlKey;
+    
+    if (isModifierPressed && !event.shiftKey && event.key === 'e') {
       event.preventDefault()
       editor?.commands.insertMathInline()
-    } else if (event.metaKey && event.shiftKey && event.key === 'e') {
+    } else if (isModifierPressed && event.shiftKey && event.key === 'e') {
       event.preventDefault()
       editor?.commands.insertMathBlock()
     }
