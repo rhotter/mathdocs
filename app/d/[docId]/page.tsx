@@ -2,7 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import MathBlock from '../../components/MathBlock'
 import MathInline from '../../components/MathInline'
 import { MathProvider } from '../../contexts/MathContext'
@@ -16,6 +16,8 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode') || 'edit'
   const { docId } = use(params)
+  const [isSynced, setIsSynced] = useState(false)  // Add this state
+
   
   const ydoc = new Y.Doc()
   const isMac = typeof window !== 'undefined' && /Macintosh/.test(navigator.userAgent);
@@ -48,7 +50,7 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
       document: ydoc,
 
       onSynced() {
-        console.log('synced')
+        setIsSynced(true)  // Set sync state to true
         if (!ydoc.getMap('config').get('initialContentLoaded') && editor) {
           ydoc.getMap('config').set('initialContentLoaded', true)
           
@@ -84,7 +86,12 @@ export default function DocPage({params}: {params: Promise<{docId: string}>}) {
   return (
     <MathProvider>
       <div className="max-w-3xl mx-auto p-8">
-        <EditorContent editor={editor} />
+        {isSynced ? 
+          <EditorContent editor={editor} /> :
+          <div>
+            Loading text...
+            </div>
+        }
       </div>
     </MathProvider>
   )
