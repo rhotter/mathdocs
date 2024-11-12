@@ -89,16 +89,30 @@ function MathInlineView(props: any) {
     evt.preventDefault()
   }, [props])
 
+  const handleBeforeInput = useCallback((evt: any) => {
+    // If trying to delete backward and the field is empty
+    if (evt.inputType === 'deleteContentBackward' && mathFieldRef.current?.value === '') {
+      // Delete the block
+      const pos = props.getPos()
+      props.editor.commands.deleteRange({ from: pos, to: pos + props.node.nodeSize })
+      // Move cursor to previous node
+      props.editor.commands.focus(pos - 1)
+      evt.preventDefault()
+    }
+  }, [props.editor, props.getPos, props.node.nodeSize])
+
   useEffect(() => {
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
       mathFieldRef.current.addEventListener('move-out', handleMoveOut)
+      mathFieldRef.current.addEventListener('beforeinput', handleBeforeInput)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
         mathFieldRef.current?.removeEventListener('move-out', handleMoveOut)
+        mathFieldRef.current?.removeEventListener('beforeinput', handleBeforeInput)
       }
     }
-  }, [handleInput, handleMoveOut])
+  }, [handleInput, handleMoveOut, handleBeforeInput])
 
   useEffect(() => {
     setTimeout(() => {
