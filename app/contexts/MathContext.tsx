@@ -92,21 +92,17 @@ export function MathProvider({ children }: { children: ReactNode }) {
     
     // Function to evaluate a single variable
     const evaluateVar = (varName: string): BoxedExpression | null => {
-      // Check for cycles
       if (evaluating.has(varName)) {
         console.warn(`Circular dependency detected for variable ${varName}`)
         return null
       }
 
-      // Get the expression for this variable
       const expr = exprs.get(varName)
       if (!expr) return null
 
-      // Mark this variable as being evaluated
       evaluating.add(varName)
 
       try {
-        // Parse the expression
         const parsedExpr = ce.parse(expr)
         
         // Get all variables this expression depends on
@@ -117,20 +113,18 @@ export function MathProvider({ children }: { children: ReactNode }) {
           if (exprs.has(dep)) {
             const depResult = evaluateVar(dep)
             if (depResult === null) {
-              return null // Propagate evaluation failure
+              return null
             }
           }
         }
 
-        // Now evaluate this expression
-        const result = parsedExpr.evaluate()
+        const result = parsedExpr.N()
         
         // Store the result
         ce.assign(varName, result)
         
         return result
       } finally {
-        // Always remove from evaluating set
         evaluating.delete(varName)
       }
     }
@@ -142,8 +136,11 @@ export function MathProvider({ children }: { children: ReactNode }) {
         if (result) {
           const id = varToId.get(varName)
           if (id) {
-            // Store the result using the original ID
-            newResults[id] = result.latex
+            newResults[id] = result.toLatex({
+              fractionalDigits: 5,
+              notation: 'engineering',
+              avoidExponentsInRange: [-3, 4]
+            })
           }
         }
       } catch (error) {
