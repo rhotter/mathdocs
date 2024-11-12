@@ -2,10 +2,9 @@
 
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import 'mathlive'
 import { useMath } from '../contexts/MathContext'
-import { BoxedExpression } from '@cortex-js/compute-engine'
 
 declare global {
   namespace JSX {
@@ -65,6 +64,10 @@ function MathBlockView(props: any) {
   const mathFieldRef = useRef<any>(null)
   const { updateExpression, results } = useMath()
   const id = props.node.attrs.id || props.getPos()
+  
+  useEffect(() => {
+    updateExpression(id, props.node.attrs.latex)
+  }, [])
 
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
