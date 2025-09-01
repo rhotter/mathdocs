@@ -58,7 +58,7 @@ export default function DocPage({
       } else {
         const modifier = isMac ? "CMD" : "CTRL";
         editor.commands.setContent(
-          `<h1>Welcome to Mathdocs</h1><p>Write markdown and press ${modifier}+E for inline math, or ${modifier}+SHIFT+E for block math.</p>`
+          `<h1>Welcome to Mathdocs</h1><p>Write markdown and press <code>${modifier}+E</code> for inline math, or <code>${modifier}+SHIFT+E</code> for block math.</p>`
         );
       }
 
