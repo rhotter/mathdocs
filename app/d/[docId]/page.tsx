@@ -8,6 +8,8 @@ import MathInline from "../../components/MathInline";
 import { MathProvider } from "../../contexts/MathContext";
 import { useSearchParams } from "next/navigation";
 import { use } from "react";
+import Link from "next/link";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 export default function DocPage({
   params,
@@ -99,6 +101,13 @@ export default function DocPage({
   return (
     <MathProvider>
       <div className="max-w-3xl mx-auto p-8">
+        <Link
+          href="/"
+          className="fixed top-6 left-6 p-2 text-gray-600 bg-gray-100 opacity-30 hover:opacity-100 hover:text-gray-700 transition-all duration-200 rounded-full hover:bg-gray-200"
+          title="Back to documents"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+        </Link>
         <EditorContent editor={editor} />
       </div>
     </MathProvider>
