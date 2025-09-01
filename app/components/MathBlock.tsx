@@ -63,7 +63,7 @@ const MathBlock = Node.create({
 
 function MathBlockView(props: any) {
   const mathFieldRef = useRef<any>(null)
-  const { updateExpression, results } = useMath()
+  const { updateExpression, results, errors } = useMath()
   const id = props.node.attrs.id || props.getPos()
 
   useEffect(() => {
@@ -150,17 +150,25 @@ function MathBlockView(props: any) {
 
   // Avoid auto-focusing on mount to prevent focus jumping to last block
   // Focus is handled when the node is actually selected (see effect above).
-  
+
   const renderedResult = useMemo(() => {
-    const r = results[id]
-    if (!r || r === '\\mathrm{Nothing}') return null
+    const error = errors[id]
+    const result = results[id]
+    
+    if (error) {
+      // Log the error and display error subtly with just an error symbol
+      console.error(`Math evaluation error for expression ${id}:`, error)
+      return `<span style="color: #dc2626;">⚠</span>`
+    }
+    
+    if (!result || result === '\\mathrm{Nothing}') return null
     try {
       // Prefix with equals for display
-      return katex.renderToString(`= ${r}`, { throwOnError: false })
+      return katex.renderToString(`= ${result}`, { throwOnError: false })
     } catch {
       return null
     }
-  }, [results, id])
+  }, [results, errors, id])
 
   const handleClick = (event: React.MouseEvent) => {
     event.preventDefault()
@@ -188,7 +196,11 @@ function MathBlockView(props: any) {
             </div>
           </div>
           {renderedResult && (
-            <div className="absolute bottom-0 right-0 px-2 py-1 bg-gray-800 text-gray-100 border border-gray-700 text-sm rounded-br-lg">
+            <div className={`absolute bottom-0 right-0 px-2 py-1 text-sm rounded-br-lg ${
+              errors[id] 
+                ? 'bg-red-100 text-red-700 border border-red-200' 
+                : 'bg-gray-800 text-gray-100 border border-gray-700'
+            }`}>
               <span
                 className="katex-block"
                 // KaTeX renders safe HTML for math; avoid focus entirely

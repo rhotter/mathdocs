@@ -4,6 +4,7 @@ import { BoxedExpression, ComputeEngine } from '@cortex-js/compute-engine'
 type MathContextType = {
   expressions: Record<string, string>
   results: Record<string, string>
+  errors: Record<string, string>
   updateExpression: (id: string, expr: string | null) => void
 }
 
@@ -12,6 +13,7 @@ const MathContext = createContext<MathContextType | null>(null)
 export function MathProvider({ children }: { children: ReactNode }) {
   const [expressions, setExpressions] = useState<Record<string, string>>({})
   const [results, setResults] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const ce = new ComputeEngine()
 
   useEffect(() => {
@@ -27,8 +29,16 @@ export function MathProvider({ children }: { children: ReactNode }) {
       return { ...prev, [id]: expr }
     })
 
-    // Clean up results when expression is removed
+    // Clean up results and errors when expression is removed
     setResults(prev => {
+      if (expr === null) {
+        const { [id]: _, ...rest } = prev
+        return rest
+      }
+      return prev
+    })
+
+    setErrors(prev => {
       if (expr === null) {
         const { [id]: _, ...rest } = prev
         return rest
@@ -60,6 +70,7 @@ export function MathProvider({ children }: { children: ReactNode }) {
   */
   const evaluateAll = (expressionsArg: Record<string, string>) => {
     const newResults: Record<string, string> = {}
+    const newErrors: Record<string, string> = {}
     
     // Map from variable name to expression
     const exprs = new Map<string, string>()
@@ -93,7 +104,10 @@ export function MathProvider({ children }: { children: ReactNode }) {
     // Function to evaluate a single variable
     const evaluateVar = (varName: string): BoxedExpression | null => {
       if (evaluating.has(varName)) {
-        console.warn(`Circular dependency detected for variable ${varName}`)
+        const id = varToId.get(varName)
+        if (id) {
+          newErrors[id] = `Circular dependency detected for variable ${varName}`
+        }
         return null
       }
 
@@ -104,6 +118,15 @@ export function MathProvider({ children }: { children: ReactNode }) {
 
       try {
         const parsedExpr = ce.parse(expr)
+        
+        // Check if parsing resulted in an error
+        if (parsedExpr.isValid === false) {
+          const id = varToId.get(varName)
+          if (id) {
+            newErrors[id] = parsedExpr.toString()
+          }
+          return null
+        }
         
         // Get all variables this expression depends on
         const deps = Array.from(parsedExpr.freeVariables)
@@ -124,6 +147,12 @@ export function MathProvider({ children }: { children: ReactNode }) {
         ce.assign(varName, result)
         
         return result
+      } catch (error) {
+        const id = varToId.get(varName)
+        if (id) {
+          newErrors[id] = error instanceof Error ? error.message : String(error)
+        }
+        return null
       } finally {
         evaluating.delete(varName)
       }
@@ -131,30 +160,33 @@ export function MathProvider({ children }: { children: ReactNode }) {
 
     // Evaluate all variables
     for (const varName of exprs.keys()) {
+      const id = varToId.get(varName)
+      if (!id) continue
+
       try {
         const result = evaluateVar(varName)
         if (result) {
-          const id = varToId.get(varName)
-          if (id) {
-            newResults[id] = result.toLatex({
-              fractionalDigits: 5,
-              notation: 'engineering',
-              avoidExponentsInRange: [-3, 4]
-            })
-          }
+          newResults[id] = result.toLatex({
+            fractionalDigits: 5,
+            notation: 'engineering',
+            avoidExponentsInRange: [-3, 4]
+          })
         }
       } catch (error) {
         console.error(`Error evaluating ${varName}:`, error)
+        newErrors[id] = error instanceof Error ? error.message : String(error)
       }
     }
 
     setResults(newResults)
+    setErrors(newErrors)
   }
 
   return (
     <MathContext.Provider value={{ 
       expressions,
       results,
+      errors,
       updateExpression,
     }}>
       {children}
