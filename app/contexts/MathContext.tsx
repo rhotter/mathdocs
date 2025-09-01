@@ -158,6 +158,41 @@ export function MathProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Helper to keep digit grouping before the decimal, but not after it
+    const stripFractionGrouping = (latex: string): string => {
+      let out = ''
+      let i = 0
+      while (i < latex.length) {
+        const ch = latex[i]
+        out += ch
+        i++
+        if (ch === '.') {
+          // We are in the fractional part: copy digits, skip grouping spaces (\\, or regular spaces)
+          while (i < latex.length) {
+            // Skip LaTeX thin space command \\, in fractional part
+            if (latex[i] === '\\' && latex.slice(i, i + 2) === '\\,') {
+              i += 2
+              continue
+            }
+            // Skip literal spaces in fractional part (defensive)
+            if (latex[i] === ' ') {
+              i += 1
+              continue
+            }
+            const c = latex[i]
+            if (c >= '0' && c <= '9') {
+              out += c
+              i += 1
+              continue
+            }
+            // Stop stripping once we hit a non-digit token
+            break
+          }
+        }
+      }
+      return out
+    }
+
     // Evaluate all variables
     for (const varName of exprs.keys()) {
       const id = varToId.get(varName)
@@ -166,11 +201,12 @@ export function MathProvider({ children }: { children: ReactNode }) {
       try {
         const result = evaluateVar(varName)
         if (result) {
-          newResults[id] = result.toLatex({
+          const latex = result.toLatex({
             fractionalDigits: 5,
             notation: 'engineering',
             avoidExponentsInRange: [-3, 4]
           })
+          newResults[id] = stripFractionGrouping(latex)
         }
       } catch (error) {
         console.error(`Error evaluating ${varName}:`, error)
