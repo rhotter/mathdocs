@@ -2,9 +2,10 @@
 
 import { Node } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 import 'mathlive'
 import { useMath } from '../contexts/MathContext'
+import katex from 'katex'
 
 declare global {
   namespace JSX {
@@ -46,12 +47,12 @@ const MathBlock = Node.create({
     return {
       insertMathBlock:
         () =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: { latex: '', result: '' },
-          })
-        },
+          ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs: { latex: '', result: '' },
+            })
+          },
     }
   },
 
@@ -64,7 +65,7 @@ function MathBlockView(props: any) {
   const mathFieldRef = useRef<any>(null)
   const { updateExpression, results } = useMath()
   const id = props.node.attrs.id || props.getPos()
-  
+
   useEffect(() => {
     updateExpression(id, props.node.attrs.latex)
   }, [])
@@ -72,11 +73,9 @@ function MathBlockView(props: any) {
   const handleInput = useCallback((evt: any) => {
     const newLatex = evt.target.value
     updateExpression(id, newLatex)
-    props.updateAttributes({ 
-      latex: newLatex,
-      result: results[id] || ''
-    })
-  }, [id, updateExpression, props.updateAttributes, results])
+    // Only update latex to reduce transactions; results are rendered via context
+    props.updateAttributes({ latex: newLatex })
+  }, [id, updateExpression, props.updateAttributes])
 
   // Moving out of the math field with arrow keys
   const handleMoveOut = useCallback((evt: any) => {
@@ -92,8 +91,16 @@ function MathBlockView(props: any) {
 
   // This effectively lets you move into the math field with arrow keys
   useEffect(() => {
-    if (props.selected && props.editor.state.selection.from === props.getPos() && 
-        props.editor.state.selection.to === props.getPos() + props.node.nodeSize) {
+    if (
+      props.selected &&
+      props.editor.state.selection.from === props.getPos() &&
+      props.editor.state.selection.to === props.getPos() + props.node.nodeSize
+    ) {
+      const ae = (typeof document !== 'undefined' ? document.activeElement : null) as HTMLElement | null
+      // If another math-field already has focus, don't steal it
+      if (ae && ae.tagName?.toLowerCase() === 'math-field' && ae !== mathFieldRef.current) {
+        return
+      }
       mathFieldRef.current?.focus()
     }
   }, [props.selected, props.editor.state.selection])
@@ -112,14 +119,16 @@ function MathBlockView(props: any) {
 
   const handleKeyDown = useCallback((evt: KeyboardEvent) => {
     // Handle Enter key to exit math block and create new paragraph
-    if (evt.key === 'Enter') {
-      const pos = props.getPos() + props.node.nodeSize
-      props.editor.chain()
+    if (evt.key === 'Enter' && !evt.isComposing) {
+      const insertPos = props.getPos() + props.node.nodeSize
+      props.editor
+        .chain()
         .focus()
-        .setTextSelection(pos)
-        .insertContent('<p></p>')
+        .insertContentAt(insertPos, { type: 'paragraph' })
+        .setTextSelection(insertPos + 1)
         .run()
       evt.preventDefault()
+      evt.stopPropagation()
     }
   }, [props.editor, props.getPos, props.node.nodeSize])
 
@@ -128,21 +137,30 @@ function MathBlockView(props: any) {
       mathFieldRef.current.addEventListener('input', handleInput)
       mathFieldRef.current.addEventListener('move-out', handleMoveOut)
       mathFieldRef.current.addEventListener('beforeinput', handleBeforeInput)
-      mathFieldRef.current.addEventListener('keydown', handleKeyDown)
+      // Capture to intercept before MathLive handles Enter
+      mathFieldRef.current.addEventListener('keydown', handleKeyDown, true)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
         mathFieldRef.current?.removeEventListener('move-out', handleMoveOut)
         mathFieldRef.current?.removeEventListener('beforeinput', handleBeforeInput)
-        mathFieldRef.current?.removeEventListener('keydown', handleKeyDown)
+        mathFieldRef.current?.removeEventListener('keydown', handleKeyDown, true)
       }
     }
   }, [handleInput, handleMoveOut, handleBeforeInput, handleKeyDown])
 
-  useEffect(() => {
-    setTimeout(() => {
-      mathFieldRef.current?.focus()
-    }, 0)
-  }, [])
+  // Avoid auto-focusing on mount to prevent focus jumping to last block
+  // Focus is handled when the node is actually selected (see effect above).
+  
+  const renderedResult = useMemo(() => {
+    const r = results[id]
+    if (!r || r === '\\mathrm{Nothing}') return null
+    try {
+      // Prefix with equals for display
+      return katex.renderToString(`= ${r}`, { throwOnError: false })
+    } catch {
+      return null
+    }
+  }, [results, id])
 
   const handleClick = (event: React.MouseEvent) => {
     event.preventDefault()
@@ -153,8 +171,8 @@ function MathBlockView(props: any) {
   return (
     <NodeViewWrapper>
       <div className="my-4 relative">
-        <div 
-          className="p-4 bg-gray-50 rounded-lg cursor-text" 
+        <div
+          className="p-4 bg-gray-50 rounded-lg cursor-text"
           onMouseDown={handleClick}
         >
           <div className="flex items-center">
@@ -169,12 +187,12 @@ function MathBlockView(props: any) {
               ></math-field>
             </div>
           </div>
-          {results[id] && results[id] !== '\\mathrm{Nothing}' && (
-            <div className="absolute bottom-0 right-0 px-2 py-1 bg-gray-800 text-gray-100 border border-gray-700 font-mono text-sm rounded-br-lg">
-              <math-field
-                read-only
-                value={`= ${results[id]}`}
-                className="border-none shadow-none bg-transparent text-gray-100"
+          {renderedResult && (
+            <div className="absolute bottom-0 right-0 px-2 py-1 bg-gray-800 text-gray-100 border border-gray-700 text-sm rounded-br-lg">
+              <span
+                className="katex-block"
+                // KaTeX renders safe HTML for math; avoid focus entirely
+                dangerouslySetInnerHTML={{ __html: renderedResult }}
               />
             </div>
           )}

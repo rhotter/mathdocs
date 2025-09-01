@@ -65,8 +65,16 @@ function MathInlineView(props: any) {
 
   // This effectively lets you move into the math field with arrow keys
   useEffect(() => {
-    if (props.selected && props.editor.state.selection.from === props.getPos() && 
-        props.editor.state.selection.to === props.getPos() + props.node.nodeSize) {
+    if (
+      props.selected &&
+      props.editor.state.selection.from === props.getPos() &&
+      props.editor.state.selection.to === props.getPos() + props.node.nodeSize
+    ) {
+      const ae = (typeof document !== 'undefined' ? document.activeElement : null) as HTMLElement | null
+      // If another math-field already has focus, don't steal it
+      if (ae && ae.tagName?.toLowerCase() === 'math-field' && ae !== mathFieldRef.current) {
+        return
+      }
       mathFieldRef.current?.focus()
     }
   }, [props.selected, props.editor.state.selection])
@@ -113,12 +121,6 @@ function MathInlineView(props: any) {
       }
     }
   }, [handleInput, handleMoveOut, handleBeforeInput])
-
-  useEffect(() => {
-    setTimeout(() => {
-      mathFieldRef.current?.focus()
-    }, 0)
-  }, [])
 
   const handleClick = (event: React.MouseEvent) => {
     event.preventDefault()
