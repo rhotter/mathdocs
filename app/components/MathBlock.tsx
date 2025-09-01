@@ -110,18 +110,33 @@ function MathBlockView(props: any) {
     }
   }, [props.editor, props.getPos, props.node.nodeSize])
 
+  const handleKeyDown = useCallback((evt: KeyboardEvent) => {
+    // Handle Enter key to exit math block and create new paragraph
+    if (evt.key === 'Enter') {
+      const pos = props.getPos() + props.node.nodeSize
+      props.editor.chain()
+        .focus()
+        .setTextSelection(pos)
+        .insertContent('<p></p>')
+        .run()
+      evt.preventDefault()
+    }
+  }, [props.editor, props.getPos, props.node.nodeSize])
+
   useEffect(() => {
     if (mathFieldRef.current) {
       mathFieldRef.current.addEventListener('input', handleInput)
       mathFieldRef.current.addEventListener('move-out', handleMoveOut)
       mathFieldRef.current.addEventListener('beforeinput', handleBeforeInput)
+      mathFieldRef.current.addEventListener('keydown', handleKeyDown)
       return () => {
         mathFieldRef.current?.removeEventListener('input', handleInput)
         mathFieldRef.current?.removeEventListener('move-out', handleMoveOut)
         mathFieldRef.current?.removeEventListener('beforeinput', handleBeforeInput)
+        mathFieldRef.current?.removeEventListener('keydown', handleKeyDown)
       }
     }
-  }, [handleInput, handleMoveOut, handleBeforeInput])
+  }, [handleInput, handleMoveOut, handleBeforeInput, handleKeyDown])
 
   useEffect(() => {
     setTimeout(() => {
