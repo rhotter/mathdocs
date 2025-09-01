@@ -44,11 +44,16 @@ const MathInline = Node.create({
     return {
       insertMathInline:
         () =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: { latex: '' },
-          })
+        ({ editor, chain }) => {
+          const { from } = editor.state.selection
+          return chain()
+            .focus()
+            .insertContent({
+              type: this.name,
+              attrs: { latex: '' },
+            })
+            .setNodeSelection(from)
+            .run()
         },
     }
   },
