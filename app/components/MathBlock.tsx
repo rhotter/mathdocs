@@ -137,27 +137,33 @@ function MathBlockView(props: any) {
 
   return (
     <NodeViewWrapper>
-      <div 
-        className="my-4 p-4 bg-gray-50 rounded-lg text-center cursor-text" 
-        onMouseDown={handleClick}
-      >
-        <math-field
-          ref={mathFieldRef}
-          value={props.node.attrs.latex}
-          default-mode="math"
-          virtual-keyboard-mode="manual"
-          menu-editor="none"
-          className="border-none shadow-none"
-        ></math-field>
-        {results[id] && results[id] !== '\\mathrm{Nothing}' && (
-          <div className="mt-2 text-gray-600 flex justify-end">
-            <math-field
-              read-only
-              value={`= ${results[id]}`}
-              className="border-none shadow-none"
-            />
+      <div className="my-4 relative">
+        <div 
+          className="p-4 bg-gray-50 rounded-lg cursor-text" 
+          onMouseDown={handleClick}
+        >
+          <div className="flex items-center">
+            <div className="flex-1 text-center">
+              <math-field
+                ref={mathFieldRef}
+                value={props.node.attrs.latex}
+                default-mode="math"
+                virtual-keyboard-mode="manual"
+                menu-editor="none"
+                className="border-none shadow-none"
+              ></math-field>
+            </div>
           </div>
-        )}
+          {results[id] && results[id] !== '\\mathrm{Nothing}' && (
+            <div className="absolute bottom-0 right-0 px-2 py-1 bg-gray-800 text-gray-100 border border-gray-700 font-mono text-sm rounded-br-lg">
+              <math-field
+                read-only
+                value={`= ${results[id]}`}
+                className="border-none shadow-none bg-transparent text-gray-100"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </NodeViewWrapper>
   )

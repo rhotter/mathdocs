@@ -44,7 +44,7 @@ math-field::part(menu-toggle) {
   outline: none;
 }
 
-.ProseMirror > * + * {
+.ProseMirror>*+* {
   margin-top: 0.75em;
 }
 
@@ -63,8 +63,6 @@ math-field::part(menu-toggle) {
 math-field[read-only] {
   min-width: unset;
   pointer-events: none;
-  /* background: transparent; */
-  @apply text-gray-600 text-sm bg-blue-200/50 rounded-md px-1;
 }
 
 math-field.inline-math {
