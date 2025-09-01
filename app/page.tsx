@@ -17,16 +17,16 @@ export default function HomePage() {
 
   const loadDocuments = () => {
     const docs: Document[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith("mathdocs-")) {
         const docId = key.replace("mathdocs-", "");
         const content = localStorage.getItem(key) || "";
-        
+
         const titleMatch = content.match(/<h1[^>]*>([^<]+)<\/h1>/);
         const title = titleMatch ? titleMatch[1] : `Document ${docId}`;
-        
+
         docs.push({
           id: docId,
           title,
@@ -35,7 +35,7 @@ export default function HomePage() {
         });
       }
     }
-    
+
     docs.sort((a, b) => b.updatedAt - a.updatedAt);
     setDocuments(docs);
     setIsLoading(false);
@@ -77,13 +77,6 @@ export default function HomePage() {
       ) : documents.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg mb-4">No documents yet</p>
-          <button
-            onClick={createNewDocument}
-            className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2 mx-auto"
-          >
-            <PlusIcon className="w-5 h-5" />
-            New
-          </button>
         </div>
       ) : (
         <div className="grid gap-4">
