@@ -33,13 +33,26 @@ export default function DocPage({
       },
     },
     immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      // Ensure first node is always an H1
+      const firstNode = editor.state.doc.firstChild;
+      if (!firstNode || firstNode.type.name !== 'heading' || firstNode.attrs.level !== 1) {
+        // Use a timeout to avoid infinite loops
+        setTimeout(() => {
+          const currentFirstNode = editor.state.doc.firstChild;
+          if (!currentFirstNode || currentFirstNode.type.name !== 'heading' || currentFirstNode.attrs.level !== 1) {
+            editor.chain().focus().insertContentAt(0, '<h1></h1>').run();
+          }
+        }, 0);
+      }
+    },
   });
 
   useEffect(() => {
     if (editor) {
       const storageKey = `mathdocs-${docId}`;
       const savedContent = localStorage.getItem(storageKey);
-      
+
       if (savedContent) {
         editor.commands.setContent(savedContent);
       } else {
@@ -54,7 +67,7 @@ export default function DocPage({
       };
 
       editor.on('update', saveContent);
-      
+
       return () => {
         editor.off('update', saveContent);
       };
